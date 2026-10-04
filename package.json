@@ -9,7 +9,7 @@
     "dev:chiara": "vite --mode chiara",
     "build:gacetilla": "tsc --noEmit && vite build --mode gacetilla",
     "build:chiara": "tsc --noEmit && vite build --mode chiara",
-    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\" && npm run build:gacetilla && npm run build:chiara",
+    "build": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true,maxRetries:8,retryDelay:250})\" && npm run build:gacetilla && npm run build:chiara",
     "test": "node --experimental-strip-types --test tests/*.test.ts"
   },
   "dependencies": {

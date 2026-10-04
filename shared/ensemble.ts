@@ -36,8 +36,14 @@ export interface Horizon {
   run(from: number, to: number, ms: number): void;
 }
 
+export interface HorizonOptions {
+  /** Makes the line draggable, like Memory on the sculpture screens: called with the fraction under
+   * the pointer while dragging (`final` false) and once more when it is released (`final` true). */
+  onSeek?: (fraction: number, final: boolean) => void;
+}
+
 /** The Memory line of the sculpture screens, reused as this screen's progress. */
-export function horizon(): Horizon {
+export function horizon(options: HorizonOptions = {}): Horizon {
   const element = el('footer', 'horizon');
   const head = el('div', 'horizon-head'), headLeft = el('span'), headRight = el('span', 'live');
   head.append(headLeft, headRight);
@@ -47,7 +53,7 @@ export function horizon(): Horizon {
   labels.append(labelLeft, labelRight);
   element.append(head, track, labels);
 
-  let last = { from: 0, to: 0, ms: 0, started: 0 };
+  let last = { from: 0, to: 0, ms: 0, started: 0 }, runs = 0;
   const place = (fraction: number, ms: number) => {
     const width = track.clientWidth;
     const transition = ms > 0 ? `transform ${ms}ms linear` : 'none';
@@ -64,6 +70,31 @@ export function horizon(): Horizon {
     if (elapsed < 1) requestAnimationFrame(() => place(last.to, last.ms * (1 - elapsed)));
   });
 
+  const seek = options.onSeek;
+  if (seek) {
+    element.classList.add('seekable');
+    const fractionAt = (clientX: number) => { const box = track.getBoundingClientRect(); return Math.max(0, Math.min(1, (clientX - box.left) / Math.max(1, box.width))); };
+    let dragging = false;
+    const follow = (event: PointerEvent, final: boolean) => {
+      const fraction = fractionAt(event.clientX);
+      runs++; // Cancels a run that was about to start.
+      place(fraction, 0);
+      seek(fraction, final);
+    };
+    track.addEventListener('pointerdown', event => {
+      event.preventDefault();
+      dragging = true;
+      // Some pointers (remotes, synthetic events) cannot be captured; dragging still works without it.
+      try { track.setPointerCapture(event.pointerId); } catch { /* Not capturable. */ }
+      element.classList.add('dragging');
+      follow(event, false);
+    });
+    track.addEventListener('pointermove', event => { if (dragging) follow(event, false); });
+    const release = (event: PointerEvent) => { if (!dragging) return; dragging = false; element.classList.remove('dragging'); follow(event, true); };
+    track.addEventListener('pointerup', release);
+    track.addEventListener('pointercancel', release);
+  }
+
   return {
     element,
     setHead(left, right) {
@@ -76,10 +107,11 @@ export function horizon(): Horizon {
     },
     run(from, to, ms) {
       last = { from, to, ms, started: performance.now() };
+      const run = ++runs;
       place(from, 0);
       // Commit the start position before animating to the end.
       void track.offsetWidth;
-      requestAnimationFrame(() => place(to, ms));
+      requestAnimationFrame(() => { if (run === runs) place(to, ms); });
     },
   };
 }
@@ -102,6 +134,24 @@ export function textLoop(sections: HTMLElement[], pixelsPerSecond = 15): HTMLEle
   document.fonts?.ready.then(pace);
   window.addEventListener('resize', pace);
   return panel;
+}
+
+/** The pointer shows while the mouse moves and hides after a few idle seconds, so on the
+ * televisions it never rests over the work. */
+export function autoHideCursor(ms = 3000): void {
+  let timer = 0;
+  const wake = () => { document.body.classList.remove('pointer-idle'); window.clearTimeout(timer); timer = window.setTimeout(() => document.body.classList.add('pointer-idle'), ms); };
+  document.body.classList.add('pointer-idle');
+  window.addEventListener('pointermove', wake, { passive: true });
+  window.addEventListener('pointerdown', wake, { passive: true });
+}
+
+/** Left and right arrows, on a keyboard or a television remote, step back and forth. */
+export function onArrows(step: (direction: 1 | -1) => void): void {
+  document.addEventListener('keydown', event => {
+    if (event.key === 'ArrowRight' || event.key === 'PageDown') { event.preventDefault(); step(1); }
+    else if (event.key === 'ArrowLeft' || event.key === 'PageUp') { event.preventDefault(); step(-1); }
+  });
 }
 
 /** Ask the browser not to dim or sleep the display while the screen runs unattended. */

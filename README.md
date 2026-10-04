@@ -20,9 +20,19 @@ npm test
 
 Se recuerdan en cada televisor hasta que se cambien:
 
-- `?modo=paginas` (por defecto): páginas de dos columnas que pasan solas, con tiempo según la cantidad de palabras.
+- `?modo=paginas` (por defecto): páginas de dos columnas que pasan solas: la presentación 7 segundos, cada una de las demás 10.
 - `?modo=scroll`: una columna que sube a velocidad de lectura, en bucle.
 - `?ritmo=lento`, `?ritmo=normal`, `?ritmo=rapido`: cuánto tiempo queda cada página, o qué tan rápido sube el texto.
+
+## Interacción
+
+Las dos pantallas corren solas en bucle. Quien tenga mouse, pantalla táctil o control remoto puede:
+
+- **Arrastrar o tocar la línea de abajo** para ir a otra página o díptico (en modo scroll, a otra parte del texto).
+- **Tocar un nombre de la lista de la izquierda** (gacetilla) para ir a ese artista.
+- **Usar las flechas ← →** del teclado o del control remoto para ir a la anterior o la siguiente.
+
+Al soltar, el bucle retoma solo desde ahí. El puntero del mouse se esconde a los 3 segundos sin moverse.
 
 ## Publicar en Netlify
 

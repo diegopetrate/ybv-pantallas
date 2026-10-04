@@ -1,4 +1,4 @@
-import { el, ensembleHeader, horizon, keepAwake, option } from '../../shared/ensemble';
+import { autoHideCursor, el, ensembleHeader, horizon, keepAwake, onArrows, option } from '../../shared/ensemble';
 import { artists, presentation, type Block } from './content';
 import { pageSeconds, sentences, wordCount } from './reading';
 import './style.css';
@@ -39,14 +39,34 @@ function renderBlock(block: Block): HTMLElement {
 }
 const splittable = (node: HTMLElement) => node.tagName === 'P' && !node.classList.contains('signature');
 
+/** What the visitor's gestures do; each mode fills these in. Whatever the gesture, the loop then
+ * carries on by itself from the chosen point. */
+const controls = {
+  /** Dragging the line: `final` when it is released. */
+  seek: (_fraction: number, _final: boolean) => {},
+  /** A name in the index. */
+  jump: (_group: number) => {},
+  /** Arrow keys or the television remote. */
+  step: (_direction: 1 | -1) => {},
+};
+
 // Index of the show on the left: the current artist is lit, as the live dot of the sculpture screens.
+// Each name opens that artist.
 const index = el('nav', 'index');
-const indexItems = groups.map((name, i) => { const item = el('span', i === 0 ? 'index-item intro' : 'index-item', name); index.append(item); return item; });
+const indexItems = groups.map((name, i) => {
+  const item = el('button', i === 0 ? 'index-item intro' : 'index-item', name);
+  item.type = 'button';
+  item.addEventListener('click', () => controls.jump(i));
+  index.append(item);
+  return item;
+});
 const highlight = (group: number) => indexItems.forEach((item, i) => item.classList.toggle('current', i === group));
 
-const line = horizon();
+const line = horizon({ onSeek: (fraction, final) => controls.seek(fraction, final) });
 screen.append(ensembleHeader('Muestra multidisciplinaria', 'Propuesta y curaduría · Carlos Campos y Guigui Kohon'), index, line.element);
 keepAwake();
+autoHideCursor();
+onArrows(direction => controls.step(direction));
 
 function heading(section: Section, part: number, parts: number) {
   const head = el('div', 'page-head');
@@ -106,7 +126,7 @@ function paginate(area: HTMLElement): Page[] {
     if (current[0].length || current[1].length) sectionPages.push(current);
     sectionPages.forEach((cols, i) => {
       const words = wordCount(section.title) + cols.flat().reduce((sum, node) => sum + wordCount(node.textContent ?? ''), 0);
-      pages.push({ section, part: i + 1, parts: sectionPages.length, columns: cols, words, seconds: pageSeconds(words) * PACE });
+      pages.push({ section, part: i + 1, parts: sectionPages.length, columns: cols, words, seconds: pageSeconds(section.group === 0) * PACE });
     });
   }
   probe.remove();
@@ -121,7 +141,9 @@ function runPages() {
   const total = () => pages.reduce((sum, page) => sum + page.seconds, 0);
   const startOf = (i: number) => pages.slice(0, i).reduce((sum, page) => sum + page.seconds, 0);
 
-  const show = (i: number) => {
+  /** Shows page i. While the line is being dragged (`playing` false) the page changes but the clock
+   * waits; otherwise the line runs and the next page follows on its own. */
+  const show = (i: number, playing = true) => {
     const page = pages[i], incoming = layers[1 - front], outgoing = layers[front];
     const columns = el('div', 'columns');
     for (const nodes of page.columns) { const column = el('div', 'column'); for (const node of nodes) column.append(node.cloneNode(true)); columns.append(column); }
@@ -134,10 +156,19 @@ function runPages() {
     const next = pages[(i + 1) % pages.length];
     line.setHead('Gacetilla', `${pad(i + 1)} / ${pad(pages.length)}`);
     line.setLabels(groups[page.section.group], next.section.group !== page.section.group ? `Sigue · ${groups[next.section.group]}` : 'Continúa');
-    line.run(startOf(i) / total(), (startOf(i) + page.seconds) / total(), page.seconds * 1000);
     window.clearTimeout(timer);
+    if (!playing) return;
+    line.run(startOf(i) / total(), (startOf(i) + page.seconds) / total(), page.seconds * 1000);
     timer = window.setTimeout(() => show((i + 1) % pages.length), page.seconds * 1000);
   };
+  const pageAt = (fraction: number) => { const time = fraction * total(); for (let i = 0; i < pages.length; i++) if (startOf(i + 1) > time) return i; return pages.length - 1; };
+  controls.seek = (fraction, final) => {
+    screen.classList.toggle('scrubbing', !final);
+    const i = pageAt(fraction);
+    if (final) show(i); else if (i !== current) show(i, false);
+  };
+  controls.jump = group => { const i = pages.findIndex(page => page.section.group === group); if (i >= 0) show(i); };
+  controls.step = direction => show((current + direction + pages.length) % pages.length);
 
   /** Paginates for the current screen size; after a resize, reading resumes at the same section. */
   const layout = (resume?: Section) => {
@@ -174,7 +205,32 @@ function runScroll() {
   screen.append(area);
   const sectionsInView = [...visible.querySelectorAll<HTMLElement>('.scroll-section')];
 
-  let seconds = 600, started = performance.now();
+  let seconds = 600, started = performance.now(), groupStarts: number[] = [];
+  /** Moves the text to a fraction of the loop and lets it carry on from there. */
+  const scrollTo = (fraction: number, final: boolean) => {
+    track.style.animation = 'none';
+    void track.offsetHeight;
+    track.style.animation = '';
+    track.style.animationDuration = `${seconds}s`;
+    track.style.animationDelay = `${-fraction * seconds}s`;
+    started = performance.now() - fraction * seconds * 1000;
+    if (final) line.run(fraction, 1, (1 - fraction) * seconds * 1000);
+  };
+  /** Where the text is in its loop, read from the scroll animation itself when the browser exposes it,
+   * so the line and the lit name stay in step even if the browser paused the page for a while. */
+  const position = () => {
+    const animation = track.getAnimations?.()[0];
+    // A jump starts the animation with a negative delay, which counts as time already scrolled.
+    const time = animation && typeof animation.currentTime === 'number' ? animation.currentTime - (Number(animation.effect?.getTiming().delay) || 0) : performance.now() - started;
+    return (time / 1000 % seconds) / seconds;
+  };
+  controls.seek = (fraction, final) => scrollTo(fraction, final);
+  controls.jump = group => { if (groupStarts[group] !== undefined) scrollTo(groupStarts[group], true); };
+  controls.step = direction => {
+    const now = position(), starts = groupStarts.filter(value => value !== undefined);
+    const target = direction > 0 ? starts.find(start => start > now + .002) ?? 0 : [...starts].reverse().find(start => start < now - .01) ?? starts[starts.length - 1];
+    scrollTo(target, true);
+  };
   const pace = () => {
     const height = visible.offsetHeight, vh = window.innerHeight / 100;
     // Reading pace: about a tenth of a line height per second keeps roughly three words a second.
@@ -182,8 +238,8 @@ function runScroll() {
     seconds = Math.max(60, height / pixelsPerSecond);
     track.style.animationDuration = `${seconds}s`;
     const offsets = sectionsInView.map(section => section.offsetTop / height);
-    const groupStarts = groups.map((_, group) => offsets[sectionsInView.findIndex(section => Number(section.dataset.group) === group)]).filter(value => value !== undefined);
-    line.setTicks(groupStarts);
+    groupStarts = groups.map((_, group) => offsets[sectionsInView.findIndex(section => Number(section.dataset.group) === group)]);
+    line.setTicks(groupStarts.filter(value => value !== undefined));
     started = performance.now();
     line.run(0, 1, seconds * 1000);
   };
@@ -194,8 +250,7 @@ function runScroll() {
 
   // Light the section being read (a third of the way down the view) and name the next one.
   window.setInterval(() => {
-    const fraction = ((performance.now() - started) / 1000 % seconds) / seconds;
-    const reading = fraction * visible.offsetHeight + area.clientHeight * .33;
+    const reading = position() * visible.offsetHeight + area.clientHeight * .33;
     let currentIndex = 0;
     sectionsInView.forEach((section, i) => { if (section.offsetTop <= reading) currentIndex = i; });
     const group = Number(sectionsInView[currentIndex].dataset.group), nextGroup = (group + 1) % groups.length;

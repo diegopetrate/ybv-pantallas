@@ -1,4 +1,4 @@
-import { el, ensembleHeader, horizon, keepAwake, textLoop, wait } from '../../shared/ensemble';
+import { autoHideCursor, el, ensembleHeader, horizon, keepAwake, onArrows, textLoop, wait } from '../../shared/ensemble';
 import { DIPTYCH_SECONDS, TITLE, diptychs, statements, type Diptych } from './content';
 import './style.css';
 
@@ -43,30 +43,44 @@ const statementSections = statements.map(statement => {
 const stage = el('section', 'diptych-stage');
 const layers = [el('article', 'diptych'), el('article', 'diptych')];
 stage.append(...layers);
-const line = horizon();
+// Dragging the line picks a diptych; on release the sequence carries on from it.
+const line = horizon({
+  onSeek: (fraction, final) => {
+    const index = Math.min(diptychs.length - 1, Math.floor(fraction * diptychs.length));
+    screen.classList.toggle('scrubbing', !final);
+    if (final) show(index); else if (index !== current) show(index, false);
+  },
+});
 line.setTicks(diptychs.map((_, index) => index / diptychs.length));
 screen.append(ensembleHeader('Chiara Scarpitti', TITLE), stage, textLoop(statementSections), line.element);
 keepAwake();
+autoHideCursor();
+onArrows(direction => show((current + direction + diptychs.length) % diptychs.length));
 
 // Load every photograph up front: the sequence never waits on the network once it has started.
 for (const diptych of diptychs) { const image = new Image(); image.src = diptych.image; }
 
-let front = 0;
+let front = 0, current = 0, timer = 0, request = 0;
 const decoded = (image: HTMLImageElement) => (image.decode ? image.decode() : Promise.resolve()).catch(() => undefined);
 
 /** Cross-fades to a diptych once its photograph is decoded (or after 1.5 s at most, so a slow decode
- * never stalls the sequence), then moves the line to match what is on screen. */
-function show(index: number) {
-  const diptych = diptychs[index], incoming = layers[1 - front], outgoing = layers[front];
+ * never stalls the sequence), then moves the line to match what is on screen. While the line is being
+ * dragged (`playing` false) the clock waits; a newer request always wins over a slower older one. */
+function show(index: number, playing = true) {
+  const diptych = diptychs[index], incoming = layers[1 - front], outgoing = layers[front], ticket = ++request;
+  window.clearTimeout(timer);
+  current = index;
   const image = compose(incoming, diptych);
   Promise.race([decoded(image), wait(1500)]).then(() => {
+    if (ticket !== request) return;
     incoming.classList.add('shown');
     outgoing.classList.remove('shown');
     front = 1 - front;
     line.setHead('Dípticos', `${pad(index + 1)} / ${pad(diptychs.length)}`);
     line.setLabels(diptych.beloved && diptych.speaker ? `${diptych.speaker} → ${diptych.beloved}` : `${diptych.poem.join(' ')} · ${diptych.attribution ?? ''}`, 'Chiara Scarpitti');
+    if (!playing) return;
     line.run(index / diptychs.length, (index + 1) / diptychs.length, DIPTYCH_SECONDS * 1000);
-    window.setTimeout(() => show((index + 1) % diptychs.length), DIPTYCH_SECONDS * 1000);
+    timer = window.setTimeout(() => show((index + 1) % diptychs.length), DIPTYCH_SECONDS * 1000);
   });
 }
 

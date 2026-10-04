@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { pageSeconds, sentences, wordCount, WORDS_PER_SECOND } from '../apps/gacetilla/reading.ts';
+import { pageSeconds, sentences, wordCount } from '../apps/gacetilla/reading.ts';
 import { artists, presentation, type Block } from '../apps/gacetilla/content.ts';
 
 const texts = (blocks: Block[]) => blocks.flatMap(block => 'text' in block ? [block.text] : []);
@@ -18,12 +18,10 @@ test('long paragraphs offer several places to break', () => {
   assert.deepEqual(sentences('Uno. Dos… “Tres.” Cuatro'), ['Uno. ', 'Dos… ', '“Tres.” ', 'Cuatro']);
 });
 
-test('a page stays long enough to be read at a visitor’s pace, within bounds', () => {
+test('the presentation stays 7 seconds and every other page 10, whatever its length', () => {
   assert.equal(wordCount('  la palabra y su  sombra '), 5);
-  assert.equal(pageSeconds(0), 12);
-  assert.equal(pageSeconds(10000), 120);
-  const words = 250;
-  assert.ok(Math.abs(pageSeconds(words) - (6 + words / WORDS_PER_SECOND)) < 1e-9);
+  assert.equal(pageSeconds(true), 7);
+  assert.equal(pageSeconds(false), 10);
 });
 
 test('every artist of the show has a biography and a work', () => {

@@ -3,6 +3,8 @@
 .diptych-stage{position:absolute;left:34px;right:calc(22px + 330px + 34px);top:100px;bottom:100px}
 .diptych{position:absolute;top:0;right:0;bottom:0;left:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity 1.4s ease}
 .diptych.shown{opacity:1}
+/* While the line is dragged, diptychs change at once. */
+.chiara.scrubbing .diptych{transition:none}
 .voice,.beloved{position:relative;flex:none;height:calc(100vh - 200px);width:calc((100vh - 200px) * 16 / 22);margin:0;border-radius:14px;overflow:hidden}
 .beloved{margin-left:2.4vh;background:#000}
 
