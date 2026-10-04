@@ -1,0 +1,49 @@
+/* Index of the show on the left, where the sculpture screens have their tools; reading area in the
+   same vertical band as their text panel (164px from the top, 100px from the bottom). */
+.index{position:absolute;z-index:4;left:34px;top:164px;width:260px;display:flex;flex-direction:column}
+.index-item{display:flex;align-items:center;gap:12px;margin-bottom:1.35vh;font:300 1.65vh/1.3 Manrope,sans-serif;letter-spacing:.02em;color:#4f6880;transition:color .8s ease}
+.index-item:before{content:'';flex:none;width:5px;height:5px;border-radius:50%;background:#26394d;transition:background .8s ease,box-shadow .8s ease}
+.index-item.intro{margin-bottom:2.4vh;font:300 1.1vh 'DM Mono',monospace;letter-spacing:.18em;text-transform:uppercase}
+.index-item.current{color:var(--ink)}
+.index-item.current:before{background:var(--glow);box-shadow:0 0 7px var(--glow)}
+
+.pages,.scroller{position:absolute;left:340px;right:60px;top:164px;bottom:100px}
+
+/* Pages */
+.page{position:absolute;top:0;right:0;bottom:0;left:0;display:flex;flex-direction:column;opacity:0;transition:opacity 1.2s ease}
+.page.shown{opacity:1}
+.page.measuring{visibility:hidden;transition:none}
+.page-head .eyebrow{margin:0 0 1.6vh}
+.page-head h2{margin:0 0 3.4vh;font-weight:300;font-size:5.6vh;line-height:1.04;letter-spacing:-.03em;color:var(--ink)}
+.columns{flex:1;min-height:0;display:flex}
+.column{flex:1;min-width:0;overflow:hidden}
+.column+.column{margin-left:4.6vh}
+
+/* Reading text, shared by both modes */
+.gacetilla p{margin:0 0 1.6vh;font:300 2.35vh/1.62 Manrope,sans-serif;color:var(--reading)}
+.gacetilla ul{margin:0 0 1.6vh;padding-left:1.3em;font:300 2.35vh/1.62 Manrope,sans-serif;color:var(--reading)}
+.gacetilla p.note{font-size:1.8vh;color:var(--quiet)}
+.gacetilla p.signature{font:300 1.7vh 'DM Mono',monospace;letter-spacing:.06em;color:var(--muted);text-align:right}
+.gacetilla p.technique{font:300 1.7vh/1.75 'DM Mono',monospace;color:var(--body)}
+.credits{margin:0 0 2.6vh}
+.credits .eyebrow{display:block;margin-bottom:.8vh}
+.gacetilla .credits .names{margin:0;font-size:2.7vh;line-height:1.45;color:var(--ink)}
+.steps{margin:1vh 0 2vh}
+.steps ol{list-style:none;margin:1.4vh 0 0;padding:0}
+.steps li{display:flex;align-items:baseline;flex-wrap:wrap;margin:0 0 1.2vh}
+/* DM Mono has no Cyrillic: я люблю вас falls back to Manrope rather than a system font. */
+.steps b{margin-right:1.6vh;font:400 3vh 'DM Mono',Manrope,monospace;letter-spacing:.1em}
+/* From the Russian to the English phrase: from the blue of one generatrix to the yellow of the other. */
+.steps li:nth-child(1) b{color:#6eb7ff}
+.steps li:nth-child(2) b{color:#a3c9e0}
+.steps li:nth-child(3) b{color:#e0d48a}
+.steps li:nth-child(4) b{color:#ffd21a}
+.steps small{font:300 1.25vh 'DM Mono',monospace;letter-spacing:.12em;color:var(--quiet);text-transform:uppercase}
+
+/* Scroll */
+.scroller{overflow:hidden;-webkit-mask-image:linear-gradient(transparent,#000 7%,#000 90%,transparent);mask-image:linear-gradient(transparent,#000 7%,#000 90%,transparent)}
+.scroll-track{animation:gacetilla-scroll 600s linear infinite;will-change:transform}
+.scroll-copy{max-width:68vw;padding-top:6vh}
+.scroll-section{padding-bottom:9vh}
+.scroller p,.scroller ul{font-size:2.7vh}
+@keyframes gacetilla-scroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}

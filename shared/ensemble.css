@@ -1,0 +1,48 @@
+/* The visual language shared by the four screens of the exhibition. Header, horizon line and text
+   panel copy the exhibition layout of the Yellow Blue Vase sculpture screens pixel for pixel, so the
+   four televisions read as one row. Sizes in px match those screens; large reading text uses vh. */
+:root{
+  --night:#03070e;--ink:#eaf5ff;--muted:#82a0b9;--quiet:#557087;--body:#8fa8bb;--reading:#a9bdce;
+  --blue:#2386ed;--glow:#3a9cff;--track:#152b40;--thumb:#e4f4ff;--line:rgba(139,194,255,.16);--panel:#050c15;
+  font-family:Manrope,system-ui,sans-serif;color:var(--ink);background:var(--night);font-synthesis:none;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--night)}
+/* Exhibition screens: no pointer over the work. */
+body{cursor:none}
+.screen{position:relative;width:100%;height:100%;overflow:hidden}
+
+/* Header: same place, size and spacing as the sculpture screens. */
+.ensemble-header{position:absolute;z-index:5;top:0;left:0;right:0;display:flex;align-items:flex-start;padding:22px 22px 18px}
+.brand{display:flex;flex-direction:column;font-size:17px;letter-spacing:.14em}
+.brand-name{display:flex;gap:.35em}
+.brand-name b{font:inherit;font-weight:inherit}
+.brand small{margin-top:4px;font:300 7px 'DM Mono',monospace;letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
+.header-meta{margin-left:auto;display:flex;align-items:center;gap:8px;font:300 10px 'DM Mono',monospace;letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
+.eyebrow{font:300 10px 'DM Mono',monospace;letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
+.dot{display:inline-block;width:5px;height:5px;border-radius:50%;background:var(--glow);box-shadow:0 0 7px var(--glow)}
+
+/* Horizon: the Memory line of the sculpture screens. Same height on every screen, so across the
+   four televisions it reads as a single line. */
+.horizon{position:absolute;z-index:5;left:34px;right:34px;bottom:16px;text-shadow:0 1px 5px var(--night),0 0 10px var(--night)}
+.horizon-head{display:flex;justify-content:space-between;align-items:center;font:300 10px 'DM Mono',monospace;letter-spacing:.18em;color:var(--muted);text-transform:uppercase}
+.horizon-head .live{display:flex;align-items:center;gap:5px;color:#6eb7ff}
+.horizon-track{position:relative;height:34px;margin:4px 0 2px}
+.horizon-track:before{content:'';position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1.5px;border-radius:4px;background:var(--track)}
+.horizon-ticks i{position:absolute;top:50%;width:1px;height:9px;margin-top:-4.5px;background:#2b4c6c}
+.horizon-fill{position:absolute;left:0;right:0;top:50%;height:3px;margin-top:-1.5px;border-radius:4px;background:var(--blue);transform-origin:0 50%;transform:scaleX(0)}
+.horizon-thumb{position:absolute;left:0;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:var(--thumb);box-shadow:0 0 12px var(--blue)}
+.horizon-labels{display:flex;justify-content:space-between;gap:24px;font:8px 'DM Mono',monospace;letter-spacing:.06em;color:var(--quiet);text-transform:uppercase}
+
+/* Text panel: the scrolling curatorial panel of the sculpture screens (no backdrop blur here:
+   these screens stay light for the televisions' GPUs). */
+.text-loop{position:absolute;z-index:4;top:164px;right:22px;bottom:100px;width:330px;overflow:hidden;border:1px solid var(--line);border-radius:22px;background:linear-gradient(180deg,rgba(5,13,23,.94),rgba(3,9,17,.9));-webkit-mask-image:linear-gradient(transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(transparent,#000 8%,#000 92%,transparent)}
+.text-loop-track{animation:text-loop-scroll var(--loop-seconds,120s) linear infinite;will-change:transform}
+.text-loop section{padding:42px 30px 54px}
+.text-loop h2{margin:9px 0 22px;font-weight:300;font-size:25px;line-height:1.08;letter-spacing:-.025em}
+.text-loop p,.text-loop li{margin:0 0 18px;color:var(--body);font-size:12px;line-height:1.72}
+.text-loop ul{margin:0 0 18px;padding-left:16px}
+.text-loop li{margin-bottom:6px}
+.text-loop .eyebrow{font-size:7px}
+@keyframes text-loop-scroll{from{transform:translateY(0)}to{transform:translateY(-50%)}}

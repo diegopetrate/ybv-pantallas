@@ -1,0 +1,25 @@
+{
+  "name": "ybv-pantallas",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pantallas de la muestra Yellow Blue Vase: gacetilla y obra de Chiara Scarpitti, junto a las dos esculturas.",
+  "scripts": {
+    "dev:gacetilla": "vite --mode gacetilla",
+    "dev:chiara": "vite --mode chiara",
+    "build:gacetilla": "tsc --noEmit && vite build --mode gacetilla",
+    "build:chiara": "tsc --noEmit && vite build --mode chiara",
+    "build": "npm run build:gacetilla && npm run build:chiara",
+    "test": "node --experimental-strip-types --test tests/*.test.ts"
+  },
+  "dependencies": {
+    "@fontsource/dm-mono": "^5.2.5",
+    "@fontsource/manrope": "^5.2.5"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.3",
+    "vite-plugin-pwa": "^1.0.3"
+  }
+}
