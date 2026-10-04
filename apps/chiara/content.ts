@@ -12,7 +12,8 @@ export interface Diptych {
   image: string;
 }
 
-export const DIPTYCH_SECONDS = 10;
+/** Long enough to read the poem and stay with the photograph. */
+export const DIPTYCH_SECONDS = 30;
 
 /** Photographs are served from this screen's own path on the site (e.g. /app2/obras/…). */
 const photo = (file: string) => `${import.meta.env.BASE_URL}obras/${file}`;

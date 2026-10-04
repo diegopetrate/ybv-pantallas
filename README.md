@@ -3,7 +3,7 @@
 Dos pantallas de la muestra **Yellow Blue Vase** que acompañan a las dos esculturas (Buenos Aires y Moscú) en la fila de cuatro televisores de 70":
 
 - **Gacetilla** (`apps/gacetilla`): presentación de la muestra y, para cada artista en orden alfabético por apellido, su biografía y su obra.
-- **Chiara Scarpitti** (`apps/chiara`): *Fragments of a More-Than-Human Lover’s Discourse*. Los seis dípticos recompuestos sobre fondo oscuro, diez segundos cada uno, y el texto de la artista en italiano, inglés y español en el panel que se desplaza.
+- **Chiara Scarpitti** (`apps/chiara`): *Fragments of a More-Than-Human Lover’s Discourse*. Los seis dípticos recompuestos sobre fondo oscuro, treinta segundos cada uno, y el texto de la artista en italiano, inglés y español en el panel que se desplaza.
 
 Las dos comparten `shared/`: el encabezado, la línea de progreso (la línea de Memoria de las esculturas, a la misma altura en las cuatro pantallas) y el panel de texto son copias exactas de las pantallas de Yellow Blue Vase, para que la fila se lea como un conjunto. Son páginas estáticas y livianas (sin 3D) y siguen funcionando si se corta internet.
 
@@ -20,7 +20,7 @@ npm test
 
 Se recuerdan en cada televisor hasta que se cambien:
 
-- `?modo=paginas` (por defecto): páginas de dos columnas que pasan solas: la presentación 7 segundos, cada una de las demás 10.
+- `?modo=paginas` (por defecto): páginas de dos columnas que pasan solas: la presentación 7 segundos, cada una de las demás 20.
 - `?modo=scroll`: una columna que sube a velocidad de lectura, en bucle.
 - `?ritmo=lento`, `?ritmo=normal`, `?ritmo=rapido`: cuánto tiempo queda cada página, o qué tan rápido sube el texto.
 

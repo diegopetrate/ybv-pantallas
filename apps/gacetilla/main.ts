@@ -1,5 +1,5 @@
-import { autoHideCursor, el, ensembleHeader, horizon, keepAwake, onArrows, option } from '../../shared/ensemble';
-import { artists, presentation, type Block } from './content';
+import { autoHideCursor, el, ensembleHeader, horizon, keepAwake, onArrows, option, wait } from '../../shared/ensemble';
+import { FOOTNOTE_MARK, artists, presentation, type Block } from './content';
 import { pageSeconds, sentences, wordCount } from './reading';
 import './style.css';
 
@@ -23,8 +23,11 @@ const pad = (n: number) => String(n).padStart(2, '0');
 
 function renderBlock(block: Block): HTMLElement {
   switch (block.kind) {
-    case 'paragraph': return el('p', undefined, block.text);
-    case 'note': return el('p', 'note', block.text);
+    case 'paragraph': {
+      const paragraph = el('p', undefined, block.text);
+      if (block.footnote) paragraph.dataset.footnote = block.footnote;
+      return paragraph;
+    }
     case 'signature': return el('p', 'signature', block.text);
     case 'technique': return el('p', 'technique', block.text);
     case 'list': { const list = el('ul'); for (const item of block.items) list.append(el('li', undefined, item)); return list; }
@@ -38,6 +41,10 @@ function renderBlock(block: Block): HTMLElement {
   }
 }
 const splittable = (node: HTMLElement) => node.tagName === 'P' && !node.classList.contains('signature');
+/** The footnote a paragraph (or the piece of it on this page) calls, if it holds the mark. Copies of
+ * a paragraph made when it is cut keep the note, so it follows whichever piece holds the mark. */
+const footnoteFor = (node: HTMLElement) =>
+  node.dataset.footnote && (node.textContent ?? '').includes(FOOTNOTE_MARK) ? el('p', 'note footnote', node.dataset.footnote) : null;
 
 /** What the visitor's gestures do; each mode fills these in. Whatever the gesture, the loop then
  * carries on by itself from the chosen point. */
@@ -63,7 +70,7 @@ const indexItems = groups.map((name, i) => {
 const highlight = (group: number) => indexItems.forEach((item, i) => item.classList.toggle('current', i === group));
 
 const line = horizon({ onSeek: (fraction, final) => controls.seek(fraction, final) });
-screen.append(ensembleHeader('Muestra multidisciplinaria', 'Propuesta y curaduría · Carlos Campos y Guigui Kohon'), index, line.element);
+screen.append(ensembleHeader('Muestra multidisciplinaria', 'Curaduría · Carlos Campos'), index, line.element);
 keepAwake();
 autoHideCursor();
 onArrows(direction => controls.step(direction));
@@ -79,7 +86,8 @@ function heading(section: Section, part: number, parts: number) {
 interface Page { section: Section; part: number; parts: number; columns: HTMLElement[][]; words: number; seconds: number }
 
 /** Lays the text into pages of two columns that fit the screen exactly. A paragraph that does not
- * fit is cut between sentences (or words, for a single long sentence) and continues in the next column. */
+ * fit is cut between sentences (or words, for a single long sentence) and continues in the next column.
+ * A footnote goes at the end of the column that holds its mark, so the two are always seen together. */
 function paginate(area: HTMLElement): Page[] {
   // The probe is a hidden page with both columns, so the first one has a real column's width.
   const probe = el('article', 'page measuring'), columns = el('div', 'columns'), column = el('div', 'column');
@@ -91,38 +99,60 @@ function paginate(area: HTMLElement): Page[] {
     const capacity = columns.clientHeight;
     const sectionPages: HTMLElement[][][] = [];
     let current: HTMLElement[][] = [[], []], slot = 0;
+    // Footnotes of the column being filled: they stay below everything else in it.
+    let notes: HTMLElement[] = [];
     const queue = section.blocks.map(renderBlock);
     const fits = () => column.scrollHeight <= capacity + 1;
-    const nextColumn = () => { slot++; column.replaceChildren(); if (slot > 1) { sectionPages.push(current); current = [[], []]; slot = 0; } };
+    /** Puts a node in the column, above the footnotes, together with the footnote it calls. */
+    const add = (node: HTMLElement) => {
+      column.insertBefore(node, notes[0] ?? null);
+      const note = footnoteFor(node);
+      if (note) column.append(note);
+      return note;
+    };
+    const takeBack = (node: HTMLElement, note: HTMLElement | null) => { node.remove(); note?.remove(); };
+    const keep = (node: HTMLElement, note = footnoteFor(node)) => { current[slot].push(node); if (note) notes.push(note); };
+    const nextColumn = () => {
+      current[slot].push(...notes);
+      notes = [];
+      slot++;
+      column.replaceChildren();
+      if (slot > 1) { sectionPages.push(current); current = [[], []]; slot = 0; }
+    };
     column.replaceChildren();
     while (queue.length) {
       const node = queue.shift()!;
-      column.append(node);
-      if (fits()) { current[slot].push(node); continue; }
-      node.remove();
+      const note = add(node);
+      if (fits()) { keep(node, note); continue; }
+      takeBack(node, note);
       const empty = column.childElementCount === 0;
       if (splittable(node)) {
         const pieces = sentences(node.textContent ?? '');
         const units = pieces.length > 1 ? pieces : (node.textContent ?? '').match(/\S+\s*/g) ?? [];
         let taken = 0;
         const trial = node.cloneNode() as HTMLElement;
-        column.append(trial);
-        while (taken < units.length) { trial.textContent = units.slice(0, taken + 1).join('').trimEnd(); if (!fits()) break; taken++; }
-        trial.remove();
+        while (taken < units.length) {
+          trial.textContent = units.slice(0, taken + 1).join('').trimEnd();
+          const trialNote = add(trial), fit = fits();
+          takeBack(trial, trialNote);
+          if (!fit) break;
+          taken++;
+        }
         if (taken > 0) {
           const head = node.cloneNode() as HTMLElement, rest = node.cloneNode() as HTMLElement;
           head.textContent = units.slice(0, taken).join('').trimEnd();
           rest.textContent = units.slice(taken).join('').trimStart();
-          current[slot].push(head);
+          keep(head);
           queue.unshift(rest);
           nextColumn();
           continue;
         }
       }
-      if (empty) { current[slot].push(node); nextColumn(); continue; } // Too tall even alone: let it run.
+      if (empty) { keep(node); nextColumn(); continue; } // Too tall even alone: let it run.
       queue.unshift(node);
       nextColumn();
     }
+    current[slot].push(...notes);
     if (current[0].length || current[1].length) sectionPages.push(current);
     sectionPages.forEach((cols, i) => {
       const words = wordCount(section.title) + cols.flat().reduce((sum, node) => sum + wordCount(node.textContent ?? ''), 0);
@@ -171,14 +201,22 @@ function runPages() {
   controls.step = direction => show((current + direction + pages.length) % pages.length);
 
   /** Paginates for the current screen size; after a resize, reading resumes at the same section. */
-  const layout = (resume?: Section) => {
-    pages = paginate(area);
+  const layout = (resume?: Section, fresh = paginate(area)) => {
+    pages = fresh;
     const groupStarts = groups.map((_, group) => pages.findIndex(page => page.section.group === group)).filter(i => i >= 0);
     line.setTicks(groupStarts.map(i => startOf(i) / total()));
     show(Math.max(0, resume ? pages.findIndex(page => page.section === resume) : 0));
   };
+  /** Where the text is cut, to tell whether a new layout changes anything. */
+  const cuts = (list: Page[]) => list.map(page => page.columns.map(nodes => nodes.map(node => node.textContent?.length ?? 0).join(',')).join('|')).join('/');
   let resizeTimer = 0;
   window.addEventListener('resize', () => { window.clearTimeout(resizeTimer); resizeTimer = window.setTimeout(() => layout(pages[current]?.section), 400); });
+  // A typeface that arrives late (a slow network on the first visit) changes the measures; if the
+  // text no longer fits as it was cut, the end of a column would be hidden, so cut it again.
+  document.fonts?.addEventListener?.('loadingdone', () => {
+    window.clearTimeout(resizeTimer);
+    resizeTimer = window.setTimeout(() => { const fresh = paginate(area); if (cuts(fresh) !== cuts(pages)) layout(pages[current]?.section, fresh); }, 400);
+  });
   layout();
   // Development only: step through the pages to check the layout without waiting for the cycle.
   if (import.meta.env.DEV) Object.assign(window, { gacetilla: { pages: () => pages, show } });
@@ -194,7 +232,8 @@ function runScroll() {
     for (const section of sections) {
       const block = el('article', 'scroll-section');
       block.dataset.group = String(section.group);
-      block.append(heading(section, 1, 1), ...section.blocks.map(renderBlock));
+      // In continuous reading a footnote follows the paragraph that calls it.
+      block.append(heading(section, 1, 1), ...section.blocks.flatMap(content => { const node = renderBlock(content), note = footnoteFor(node); return note ? [node, note] : [node]; }));
       group.append(block);
     }
     return group;
@@ -260,5 +299,12 @@ function runScroll() {
   }, 500);
 }
 
+/** Every face the text is set in. The browser only fetches a face once some text needs it, so
+ * `document.fonts.ready` alone resolves before any has started loading; asking for them explicitly
+ * makes the pages measure the real letters, not the fallback (Cyrillic for я люблю вас). */
+const FACES = ['300 16px Manrope', '400 16px Manrope', '300 16px "DM Mono"', '400 16px "DM Mono"'];
+const fontsIn = document.fonts
+  ? Promise.race([Promise.all(FACES.map(face => document.fonts.load(face, 'Aá я'))).catch(() => undefined), wait(5000)]).then(() => document.fonts.ready)
+  : Promise.resolve();
 // Measure only once the fonts are in, or the pages would be cut for the fallback font.
-(document.fonts ? document.fonts.ready : Promise.resolve()).then(() => (MODE === 'scroll' ? runScroll() : runPages()));
+fontsIn.then(() => (MODE === 'scroll' ? runScroll() : runPages()));

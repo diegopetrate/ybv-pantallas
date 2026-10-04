@@ -2,8 +2,8 @@
  * Wording as in the document; only plain typos were corrected (accents, doubled letters, missing
  * spaces after full stops). */
 export type Block =
-  | { kind: 'paragraph'; text: string }
-  | { kind: 'note'; text: string }
+  /** `footnote` is shown on the same page as the paragraph's FOOTNOTE_MARK, never on the next one. */
+  | { kind: 'paragraph'; text: string; footnote?: string }
   | { kind: 'signature'; text: string }
   | { kind: 'technique'; text: string }
   | { kind: 'list'; items: string[] }
@@ -19,7 +19,10 @@ export interface Artist {
   work: { title: string; blocks: Block[] };
 }
 
-const p = (text: string): Block => ({ kind: 'paragraph', text });
+/** The footnote call, as written in the press release. */
+export const FOOTNOTE_MARK = '(*)';
+
+const p = (text: string, footnote?: string): Block => (footnote ? { kind: 'paragraph', text, footnote } : { kind: 'paragraph', text });
 
 const artistsAsWritten: Artist[] = [
   {
@@ -32,10 +35,10 @@ const artistsAsWritten: Artist[] = [
     work: {
       title: 'Traducciones',
       blocks: [
-        p('Las obras presentadas para esta muestra exploran tres circunstancias materiales: un lienzo pintado con grafito y pastel de uno de los ángeles del Puente Vittorio Emmanuelle de Roma, un dibujo realizado por una máquina de dibujar y luego intervenido a mano con trazos de tinta y láminas de oro, y un tríptico: dibujos realizados por una máquina robótica sobre placas de acero, coloreadas y deformadas por el uso de soldadura eléctrica (*).'),
+        p('Las obras presentadas para esta muestra exploran tres circunstancias materiales: un lienzo pintado con grafito y pastel de uno de los ángeles del Puente Vittorio Emmanuelle de Roma, un dibujo realizado por una máquina de dibujar y luego intervenido a mano con trazos de tinta y láminas de oro, y un tríptico: dibujos realizados por una máquina robótica sobre placas de acero, coloreadas y deformadas por el uso de soldadura eléctrica (*).',
+          '(*) En colaboración con Carlos Guerrero, estudiante de la ESAD UM. Carlos trabajó en su taller de soldadura siguiendo los trazos de la máquina de dibujar.'),
         p('Las obras comparten algo más que el color amarillo y azul. El ángel es un híbrido humano-no humano: un contenedor metálico vacío que vincula el cielo con la tierra. Una figura hermosa y monstruosa al mismo tiempo. El dibujo generado a partir de un robot (máquina de dibujar) tiene rasgos no humanos, aleatorios, no busca un sentido ni un significado. Sin embargo, el sombreado y la aplicación de color, textura y láminas de oro activa nuestra comprensión, nuestra mente busca conexiones, reconociendo formas arquitectónicas, encontrando alegorías, narraciones, proyectando espacios, vasijas, ángeles.'),
         p('Las placas de acero, robustas, estables, se doblegan frente a la enorme liberación de energía que sigue las líneas de la máquina de dibujar. La enorme energía liberada por la soldadora aporta una deformación incontenible y la sorpresiva aparición del color. Surgen los amarillos y los azules. La placa se deforma, buscando convertirse en contenedor, vasija, ángel. Las sombras y los brillos aleatorios, y de nuevo la aplicación del oro reafirman esta condición inesperada, híbrida, monstruosa, siempre abierta a una interpretación. Las imágenes, como la perla de la joven de Vermeer, como el lenguaje y como el amor, son hermosas construcciones que pertenecen un poco a la mente, un poco a la aleatoriedad.'),
-        { kind: 'note', text: '(*) En colaboración con Carlos Guerrero, estudiante de la ESAD UM. Carlos trabajó en su taller de soldadura siguiendo los trazos de la máquina de dibujar.' },
       ],
     },
   },
@@ -48,7 +51,7 @@ const artistsAsWritten: Artist[] = [
       p('Sus obras han sido preseleccionadas en el Salón Nacional 2026 y seleccionada en: Del piso al techo, homenaje a Ale Vautier, Galería C. Caballero 2025; 51° Salón Nacional MUMBAT, Tandil 2024; XLIII Salón Provincial de Artes Visuales, Salta 2023; VI Artes Plásticas DCOOP, Málaga 2020; V Bienal de Artes Visuales Áreatec 2018; VII Salón de Pintura Vicentin, Sta. Fe 2018; XLIX Félix de Amador 2018; Trienal Art Tallin Omand Posesión Estonia 2001; 2º Festival internacional de investigación artística MUVIM, Valencia 2001; 5ta Ruta d’Art Jove, Premia de Mar 2000; Talente 99, Sonderschau der Internationalen Handwerksmess, Munich 1999 y X Bienal de Jóvenes Europa y Mediterráneo, La Merce 1998. Realiza exposiciones en Suiza, Alemania, Polonia, Estonia, España, Portugal, Estados Unidos, México, Uruguay, Chile y Argentina.'),
     ],
     work: {
-      title: 'Azules',
+      title: 'Antes del sentido',
       blocks: [
         p('¿Un tejido de equívocos puede hacer que un jarrón amarillo azul resuene a una declaración de amor? ¿La huella ancestral de miles de jarrones podría leerse como las miles de torsiones de aquello que no puede escribirse y adentrarnos en la invitación de Nabokov a no leer desde el sentido? Frente a la imposibilidad de decir todo, frente al agujero que bordea la palabra algo insiste y escapa.'),
         p('Así se abre la posibilidad a la dimensión poética, a lo que va más allá del sentido, a lo que resuena en el equívoco: “Yellow blue vase//Te amo” de Nabokov. Las obras de Guigui Kohon nos convidan a ese viaje de resonancias, de hiancias de sentido, de borde, de agujero, de poesía.'),
@@ -165,6 +168,6 @@ export const presentation = {
   blocks: [
     p('Es una muestra multidisciplinaria compuesta por arquitectos y diseñadores que muestra el carácter expansivo y poliédrico de nuestras disciplinas. Diseñadores y Arquitectos cuya expresión artística nos hacen reflexionar, mostrando al público y a los estudiantes el alcance de nuestro quehacer. Yellow Blue Vase es una oportunidad para proyectar UM hacia la comunidad, y también una oportunidad de reflexión interna a propósito de nuestras miras, intereses, alcances y repercusiones.'),
     { kind: 'credits', label: 'Artistas que componen la muestra', names: `${artists.map(artist => artist.name).join(', ')}.` },
-    { kind: 'credits', label: 'Propuesta y curaduría', names: 'Carlos Campos y Guigui Kohon.' },
+    { kind: 'credits', label: 'Curaduría', names: 'Carlos Campos.' },
   ] as Block[],
 };

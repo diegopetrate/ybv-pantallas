@@ -26,6 +26,8 @@
 .gacetilla p{margin:0 0 1.6vh;font:300 2.35vh/1.62 Manrope,sans-serif;color:var(--reading)}
 .gacetilla ul{margin:0 0 1.6vh;padding-left:1.3em;font:300 2.35vh/1.62 Manrope,sans-serif;color:var(--reading)}
 .gacetilla p.note{font-size:1.8vh;color:var(--quiet)}
+/* A footnote closes the column that holds its mark (*), under a thin rule. */
+.gacetilla p.footnote{margin-top:2.6vh;padding-top:1.4vh;border-top:1px solid var(--line)}
 .gacetilla p.signature{font:300 1.7vh 'DM Mono',monospace;letter-spacing:.06em;color:var(--muted);text-align:right}
 .gacetilla p.technique{font:300 1.7vh/1.75 'DM Mono',monospace;color:var(--body)}
 .credits{margin:0 0 2.6vh}

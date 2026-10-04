@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { pageSeconds, sentences, wordCount } from '../apps/gacetilla/reading.ts';
-import { artists, presentation, type Block } from '../apps/gacetilla/content.ts';
+import { FOOTNOTE_MARK, artists, presentation, type Block } from '../apps/gacetilla/content.ts';
 
 const texts = (blocks: Block[]) => blocks.flatMap(block => 'text' in block ? [block.text] : []);
 const allTexts = [...texts(presentation.blocks), ...artists.flatMap(artist => [...texts(artist.bio), ...texts(artist.work.blocks)])];
@@ -18,10 +18,10 @@ test('long paragraphs offer several places to break', () => {
   assert.deepEqual(sentences('Uno. Dos… “Tres.” Cuatro'), ['Uno. ', 'Dos… ', '“Tres.” ', 'Cuatro']);
 });
 
-test('the presentation stays 7 seconds and every other page 10, whatever its length', () => {
+test('the presentation stays 7 seconds and every other page 20, whatever its length', () => {
   assert.equal(wordCount('  la palabra y su  sombra '), 5);
   assert.equal(pageSeconds(true), 7);
-  assert.equal(pageSeconds(false), 10);
+  assert.equal(pageSeconds(false), 20);
 });
 
 test('every artist of the show has a biography and a work', () => {
@@ -35,4 +35,16 @@ test('artists are always in alphabetical order by surname, matching the credits 
   assert.deepEqual(artists.map(artist => artist.name), ['Lorena Bonilla', 'Alejandro Borrachia', 'Carlos Campos', 'Guigui Kohon', 'Diego Petrate', 'Chiara Scarpitti', 'Yamila Zÿnda Aiub']);
   const credits = presentation.blocks.find(block => block.kind === 'credits');
   assert.equal(credits && 'names' in credits ? credits.names : '', `${artists.map(artist => artist.name).join(', ')}.`);
+});
+
+test('a footnote is called once by its paragraph, and no cut can split the mark', () => {
+  const called = artists.flatMap(artist => [...artist.bio, ...artist.work.blocks]).filter(block => block.kind === 'paragraph' && block.footnote);
+  assert.equal(called.length, 1);
+  for (const block of called) {
+    if (block.kind !== 'paragraph') continue;
+    assert.equal(block.text.split(FOOTNOTE_MARK).length, 2);
+    assert.ok(block.footnote?.startsWith(FOOTNOTE_MARK));
+    assert.equal(sentences(block.text).filter(piece => piece.includes(FOOTNOTE_MARK)).length, 1);
+    assert.equal((block.text.match(/\S+\s*/g) ?? []).filter(word => word.includes(FOOTNOTE_MARK)).length, 1);
+  }
 });
