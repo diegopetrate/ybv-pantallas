@@ -1,0 +1,32 @@
+# One site for both screens, like Yellow Blue Vase's /1 … /4:
+#   /app1  Gacetilla          /app2  Chiara Scarpitti
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# The site's root opens the first screen, as / opens screen 1 of the sculptures.
+[[redirects]]
+  from = "/"
+  to = "/app1/"
+  status = 302
+
+# Readable aliases.
+[[redirects]]
+  from = "/gacetilla"
+  to = "/app1/"
+  status = 301
+
+[[redirects]]
+  from = "/chiara"
+  to = "/app2/"
+  status = 301
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"

@@ -11,8 +11,8 @@ Las dos comparten `shared/`: el encabezado, la línea de progreso (la línea de 
 
 ```bash
 npm install
-npm run dev:gacetilla   # http://localhost:5176
-npm run dev:chiara      # http://localhost:5177
+npm run dev:gacetilla   # http://localhost:5176/app1/
+npm run dev:chiara      # http://localhost:5177/app2/
 npm test
 ```
 
@@ -26,14 +26,15 @@ Se recuerdan en cada televisor hasta que se cambien:
 
 ## Publicar en Netlify
 
-Un repositorio y dos sitios. En cada sitio, en **Site configuration → Build & deploy**:
+Un solo sitio, con la misma lógica que Yellow Blue Vase (`/1` … `/4`): cada pantalla en su ruta.
 
-| Sitio | Base directory | Build command | Publish directory |
-|---|---|---|---|
-| Gacetilla | *(vacío)* | `npm run build:gacetilla` | `dist/gacetilla` |
-| Chiara Scarpitti | *(vacío)* | `npm run build:chiara` | `dist/chiara` |
+| Ruta | Pantalla |
+|---|---|
+| `/app1` | Gacetilla (también `/gacetilla`) |
+| `/app2` | Chiara Scarpitti (también `/chiara`) |
+| `/` | lleva a `/app1` |
 
-Node 22 viene de `.nvmrc`.
+Toda la configuración está en `netlify.toml` (build `npm run build`, publicación `dist`, Node 22, redirecciones y encabezados): al importar el repositorio en Netlify no hay que completar nada.
 
 ## Contenido
 

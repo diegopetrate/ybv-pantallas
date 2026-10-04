@@ -14,13 +14,16 @@ export interface Diptych {
 
 export const DIPTYCH_SECONDS = 10;
 
+/** Photographs are served from this screen's own path on the site (e.g. /app2/obras/…). */
+const photo = (file: string) => `${import.meta.env.BASE_URL}obras/${file}`;
+
 export const diptychs: Diptych[] = [
-  { poem: ['ya lyublyu vas'], attribution: 'Vladimir Nabokov', image: '/obras/01-ya-lyublyu-vas.jpg' },
-  { speaker: 'Pinctada margaritifera', poem: ['Ho ingoiato', 'il tuo corpo', 'per farti risplendere.', 'Strato su strato'], beloved: 'Arena', image: '/obras/02-pinctada-margaritifera.jpg' },
-  { speaker: 'Xanthoria parietina', poem: ['Consumo', 'la tua superficie.', 'È l’unico modo', 'per restarti dentro'], beloved: 'Saxum', image: '/obras/03-xanthoria-parietina.jpg' },
-  { speaker: 'Coccinella septempunctata', poem: ['Mille corpi', 'in una fessura.', 'Non bastiamo', 'in due'], beloved: 'Cortex', image: '/obras/04-coccinella-septempunctata.jpg' },
-  { speaker: 'Eucera longicornis', poem: ['Ti ho cercata', 'tutta la primavera.', 'Me ne vado', 'piena di te'], beloved: 'Ophrys apifera', image: '/obras/05-eucera-longicornis.jpg' },
-  { speaker: 'Aliivibrio fischeri', poem: ['Il tuo ventre', 'è luce,', 'e vita', 'nell’abisso'], beloved: 'Euprymna scolopes', image: '/obras/06-aliivibrio-fischeri.jpg' },
+  { poem: ['ya lyublyu vas'], attribution: 'Vladimir Nabokov', image: photo('01-ya-lyublyu-vas.jpg') },
+  { speaker: 'Pinctada margaritifera', poem: ['Ho ingoiato', 'il tuo corpo', 'per farti risplendere.', 'Strato su strato'], beloved: 'Arena', image: photo('02-pinctada-margaritifera.jpg') },
+  { speaker: 'Xanthoria parietina', poem: ['Consumo', 'la tua superficie.', 'È l’unico modo', 'per restarti dentro'], beloved: 'Saxum', image: photo('03-xanthoria-parietina.jpg') },
+  { speaker: 'Coccinella septempunctata', poem: ['Mille corpi', 'in una fessura.', 'Non bastiamo', 'in due'], beloved: 'Cortex', image: photo('04-coccinella-septempunctata.jpg') },
+  { speaker: 'Eucera longicornis', poem: ['Ti ho cercata', 'tutta la primavera.', 'Me ne vado', 'piena di te'], beloved: 'Ophrys apifera', image: photo('05-eucera-longicornis.jpg') },
+  { speaker: 'Aliivibrio fischeri', poem: ['Il tuo ventre', 'è luce,', 'e vita', 'nell’abisso'], beloved: 'Euprymna scolopes', image: photo('06-aliivibrio-fischeri.jpg') },
 ];
 
 export const TITLE = 'Fragments of a More-Than-Human Lover’s Discourse';
