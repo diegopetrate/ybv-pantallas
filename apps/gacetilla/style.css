@@ -36,13 +36,9 @@
 .steps{margin:1vh 0 2vh}
 .steps ol{list-style:none;margin:1.4vh 0 0;padding:0}
 .steps li{display:flex;align-items:baseline;flex-wrap:wrap;margin:0 0 1.2vh}
-/* DM Mono has no Cyrillic: я люблю вас falls back to Manrope rather than a system font. */
-.steps b{margin-right:1.6vh;font:400 3vh 'DM Mono',Manrope,monospace;letter-spacing:.1em}
-/* From the Russian to the English phrase: from the blue of one generatrix to the yellow of the other. */
-.steps li:nth-child(1) b{color:#6eb7ff}
-.steps li:nth-child(2) b{color:#a3c9e0}
-.steps li:nth-child(3) b{color:#e0d48a}
-.steps li:nth-child(4) b{color:#ffd21a}
+/* The four steps of the phrase read like the rest of the text (Manrope includes Cyrillic). */
+.steps b{margin-right:1.6vh;font:300 2.35vh/1.62 Manrope,sans-serif;color:var(--reading)}
+.scroller .steps b{font-size:2.7vh}
 .steps small{font:300 1.25vh 'DM Mono',monospace;letter-spacing:.12em;color:var(--quiet);text-transform:uppercase}
 
 /* Scroll */
